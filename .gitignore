@@ -1,0 +1,74 @@
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# Pytest
+.pytest_cache/
+
+# Cobertura
+htmlcov/
+.coverage
+.coverage.*
+
+# Logs
+*.log
+
+# =========================
+# JAVA
+# =========================
+
+# Compilação
+*.class
+
+# Pacotes
+*.jar
+*.war
+*.ear
+
+# Build tools
+target/
+build/
+out/
+
+# Maven
+.mvn/
+dependency-reduced-pom.xml
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# IntelliJ
+.idea/
+*.iml
+
+# =========================
+# IDEs / EDITORES (geral)
+# =========================
+.vscode/
+
+# =========================
+# SISTEMA OPERACIONAL
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# OUTROS
+# =========================
+*.sqlite3
