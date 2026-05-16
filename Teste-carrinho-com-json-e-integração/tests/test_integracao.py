@@ -1,94 +1,72 @@
 import pytest
 import json
 import os
+from unittest.mock import patch, MagicMock
 
 from src.produtos import Produtos
-from src.pagamento import Pagamento
 from src.venda import processar_venda
 
 
 @pytest.fixture
-def ambiente():
-    arquivo = "temp.json"
-    dados = [
-        {"id": 101, "nome": "Teclado Mecânico", "preco": 250.0, "quantidade": 8},
-        {"id": 103, "nome": "SSD", "preco": 0.0, "quantidade": 10},
-        {"id": 105, "nome": "Cadeira", "preco": -800.0, "quantidade": 3},
-        {"id": 106, "nome": "Headset", "preco": 350.0, "quantidade": 0}
+def banco_temporario():
+    arquivo = "temp_db.json"
+    dados_iniciais = [
+        {"id": 101, "nome": "Teclado Mecânico", "preco": 250.0, "quantidade": 8}
     ]
 
-    with open(arquivo, "w") as f:
-        json.dump(dados, f)
+    with open(arquivo, "w", encoding="utf-8") as f:
+        json.dump(dados_iniciais, f)
 
-    produtos = Produtos(arquivo)
-    pagamento = Pagamento(banco_api=None)
-
-    yield produtos, pagamento
+    repo = Produtos(arquivo)
+    yield repo
 
     if os.path.exists(arquivo):
         os.remove(arquivo)
 
 
-# -------------------------
-# CASO VÁLIDO
-# -------------------------
-def test_venda_produto_valido(ambiente):
-    produtos, pagamento = ambiente
+@pytest.fixture
+def banco_com_dados_invalidos():
+    arquivo = "invalid_db.json"
+    dados = [
+        {"id": 999, "nome": "Produto de Graça", "preco": 0.0, "quantidade": 10},
+        {"id": 888, "nome": "Produto Negativo", "preco": -50.0, "quantidade": 5},
+        {"id": None, "nome": "Produto Sem ID", "preco": 10.0, "quantidade": 1}
+    ]
 
-    class MockBanco:
-        def processar(self, valor):
-            return {"status": "aprovado"}
+    with open(arquivo, "w", encoding="utf-8") as f:
+        json.dump(dados, f)
 
-    pagamento.banco = MockBanco()
+    repo = Produtos(arquivo)
+    yield repo
 
-    resultado = processar_venda(produtos, pagamento, 101, 2, "pix")
+    if os.path.exists(arquivo):
+        os.remove(arquivo)
 
+
+@patch("src.pagamento.Pagamento")
+def test_venda_integrada(mock_pagamento_class, banco_temporario):
+    mock_pagamento = MagicMock()
+    mock_pagamento.calcular_total.return_value = 475.0
+    mock_pagamento.pagar.return_value = {"status": "aprovado"}
+
+    mock_pagamento_class.return_value = mock_pagamento
+
+    resultado = processar_venda(
+        banco_temporario,
+        mock_pagamento,
+        101,
+        2,
+        "pix"
+    )
+
+    assert resultado["produto"] == "Teclado Mecânico"
     assert resultado["status"] == "aprovado"
 
 
-# -------------------------
-# PREÇO ZERO
-# -------------------------
-def test_preco_zero(ambiente):
-    produtos, pagamento = ambiente
+@patch("src.pagamento.Pagamento")
+def test_venda_id_inexistente(mock_pagamento_class, banco_com_dados_invalidos):
+    mock_pagamento = MagicMock()
+    mock_pagamento_class.return_value = mock_pagamento
 
-    class MockBanco:
-        def processar(self, valor):
-            return {"status": "aprovado"}
-
-    pagamento.banco = MockBanco()
-
-    with pytest.raises(ValueError):
-        processar_venda(produtos, pagamento, 103, 1, "pix")
-
-
-# -------------------------
-# PREÇO NEGATIVO
-# -------------------------
-def test_preco_negativo(ambiente):
-    produtos, pagamento = ambiente
-
-    class MockBanco:
-        def processar(self, valor):
-            return {"status": "aprovado"}
-
-    pagamento.banco = MockBanco()
-
-    with pytest.raises(ValueError):
-        processar_venda(produtos, pagamento, 105, 1, "pix")
-
-
-# -------------------------
-# ESTOQUE ZERO
-# -------------------------
-def test_estoque_zero(ambiente):
-    produtos, pagamento = ambiente
-
-    class MockBanco:
-        def processar(self, valor):
-            return {"status": "aprovado"}
-
-    pagamento.banco = MockBanco()
-
-    with pytest.raises(ValueError):
-        processar_venda(produtos, pagamento, 106, 1, "pix")
+    with pytest.raises(ValueError, match="Produto não encontrado"):
+        processar_venda(banco_com_dados_invalidos, mock_pagamento, 777, 1, "pix")

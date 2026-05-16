@@ -1,6 +1,6 @@
 # Atividades Teste de Software
 
-Este repositório contém as atividades da disciplina de **Teste de Software**, abordando testes unitários, parametrizados e de integração em Python e Java.
+Este repositório contém as atividades da disciplina de **Teste de Software**, abordando testes unitários, parametrizados e de integração em Python.
 
 ---
 
@@ -10,17 +10,15 @@ Este repositório contém as atividades da disciplina de **Teste de Software**, 
 
 - Euclides Benício
 
-
-
 ## 1. Média de Alunos
 
 ```
 Media-de-alunos-parametrizados
 ```
 
-- Cálculo de média com testes parametrizados
-- Uso de `@ParameterizedTest` (JUnit 5)
-- Validação de múltiplos cenários
+- Cálculo da média e classificação de alunos com base em 4 notas
+- Uso de pytest.mark.parametrize para múltiplos cenários de teste
+- Validação automática de diferentes situações (Aprovado, Recuperação, Final, Reprovado)
 
 ---
 

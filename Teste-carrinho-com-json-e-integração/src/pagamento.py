@@ -1,12 +1,11 @@
 class BancoAPI:
     def processar(self, valor):
-        # simulação simples
         return {"status": "aprovado", "valor": valor}
 
 
 class Pagamento:
-    def __init__(self, banco_api):
-        self.banco = banco_api
+    def __init__(self, banco_api=None):
+        self.banco = banco_api if banco_api is not None else BancoAPI()
 
     def calcular_total(self, preco, quantidade, forma):
         total = preco * quantidade
